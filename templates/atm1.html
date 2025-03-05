@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATM Interface</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #141e30, #243b55);
+            color: #fff;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #1c2b3a;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1, h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        input {
+            padding: 12px;
+            margin: 15px 0;
+            border: none;
+            border-radius: 5px;
+            width: 95%;
+            font-size: 1.2rem;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 12px 25px;
+            margin: 15px 0;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .message {
+            font-size: 1.3rem;
+            margin: 25px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div id="welcome">
+            <h1>Welcome to the ATM</h1>
+            <p>Enter your PIN to proceed:</p>
+            <input type="password" id="pin" maxlength="4" placeholder="Enter 4-digit PIN">
+            <button onclick="login()">Login</button>
+        </div>
+
+        <!-- Main Menu -->
+        <div id="menu" class="hidden">
+            <h2>Main Menu</h2>
+            <p class="message">Choose an option:</p>
+            <button onclick="balanceEnquiry()">Balance Enquiry</button>
+            <button onclick="withdraw()">Withdraw</button>
+            <button onclick="changePin()">Change PIN</button>
+            <button onclick="logout()">Logout</button>
+        </div>
+
+        <!-- Balance Enquiry -->
+        <div id="balance" class="hidden">
+            <h2>Balance Enquiry</h2>
+            <p id="balance-message"></p>
+            <button onclick="goBack()">Back</button>
+        </div>
+
+        <!-- Withdraw Interface -->
+        <div id="withdraw" class="hidden">
+            <h2>Withdraw Amount</h2>
+            <p>Enter amount to withdraw:</p>
+            <input type="number" id="withdraw-amount" placeholder="Enter amount">
+            <button onclick="submitWithdraw()">Submit</button>
+            <button onclick="goBack()">Back</button>
+        </div>
+
+        <!-- Change PIN Interface -->
+        <div id="change-pin" class="hidden">
+            <h2>Change PIN</h2>
+            <p>Enter new PIN and confirm:</p>
+            <input type="password" id="new-pin" placeholder="New PIN">
+            <input type="password" id="confirm-pin" placeholder="Confirm PIN">
+            <button onclick="submitChangePin()">Submit</button>
+            <button onclick="goBack()">Back</button>
+        </div>
+
+        <!-- Transaction Success Interface -->
+        <div id="transaction-success" class="hidden">
+            <h2>Transaction Successful!</h2>
+            <p>Your transaction has been completed successfully.</p>
+            <button onclick="goBackToMenu()">Go Back to Menu</button>
+        </div>
+
+        <!-- Thank You Interface -->
+        <div id="thank-you" class="hidden">
+            <h2>Thank You!</h2>
+            <p>Thank you for using the ATM. Have a great day!</p>
+        </div>
+    </div>
+
+    <script>
+        function showOnly(divId) {
+            document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
+            document.getElementById(divId).classList.remove('hidden');
+        }
+
+        function login() {
+            const pin = document.getElementById('pin').value;
+            fetch('/atm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'login', pin })
+            }).then(res => res.json()).then(data => {
+                if (data.error) alert(data.error);
+                else showOnly('menu');
+            });
+        }
+
+        function balanceEnquiry() {
+            const pin = document.getElementById('pin').value;
+            fetch('/atm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'balance_enquiry', pin })
+            }).then(res => res.json()).then(data => {
+                if (data.error) alert(data.error);
+                else {
+                    document.getElementById('balance-message').innerText = data.message;
+                    showOnly('balance');
+                }
+            });
+        }
+
+        function withdraw() {
+            showOnly('withdraw');
+        }
+
+        function submitWithdraw() {
+            const pin = document.getElementById('pin').value;
+            const amount = document.getElementById('withdraw-amount').value;
+            fetch('/atm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'withdraw', pin, amount })
+            }).then(res => res.json()).then(data => {
+                if (data.error) alert(data.error);
+                else showOnly('transaction-success');
+            });
+        }
+
+        function changePin() {
+            showOnly('change-pin');
+        }
+
+        function submitChangePin() {
+            const pin = document.getElementById('pin').value;
+            const newPin = document.getElementById('new-pin').value;
+            const confirmPin = document.getElementById('confirm-pin').value;
+            fetch('/atm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'change_pin', pin, new_pin: newPin, confirm_pin: confirmPin })
+            }).then(res => res.json()).then(data => {
+                if (data.error) alert(data.error);
+                else showOnly('transaction-success');
+            });
+        }
+
+        function logout() {
+            showOnly('thank-you');
+        }
+
+        function goBack() {
+            showOnly('menu');
+        }
+
+        function goBackToMenu() {
+            showOnly('menu');
+        }
+    </script>
+</body>
+</html>
